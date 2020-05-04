@@ -1,3 +1,4 @@
+// 2020.04 by NIE
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 
@@ -20,11 +21,12 @@ function declareGen(e:TextEditor, d:TextDocument, declareType:string, portText:s
     //console.log(portText.trim().split(/\s+/)[1])
     //console.log(portText.trim().split(/\s+/).length)
     let portTextLength = portText.trim().split(/\s+/).length ;
+    var portOut:string ;
     if(portTextLength == 1)
     {
         let port0Num:number = parseInt(portText.trim().split(/\s+/)[0]) -1;
-        console.log("port0Num:"+port0Num);
-        var portOut:string ;
+        //console.log("port0Num:"+port0Num);
+        
         if( port0Num == 0){
             portOut= '';
         }
@@ -35,15 +37,15 @@ function declareGen(e:TextEditor, d:TextDocument, declareType:string, portText:s
             portOut= '['+port0Num.toString()+":0]";
         }
 
-        console.log('portOut:' + portOut);
+        //console.log('portOut:' + portOut);
 
     }
     else if(portTextLength == 2)
     {
         let port0Num = parseInt(portText.trim().split(/\s+/)[0]) -1;
         let port1Num = parseInt(portText.trim().split(/\s+/)[1]) -1;
-        var portOut:string =  '['+port0Num.toString()+":0]" + '['+port1Num.toString()+":0]";
-        console.log('portOut:' + portOut);
+        portOut =  '['+port0Num.toString()+":0]" + '['+port1Num.toString()+":0]";
+        //console.log('portOut:' + portOut);
     }
     else
     {
@@ -52,7 +54,7 @@ function declareGen(e:TextEditor, d:TextDocument, declareType:string, portText:s
     }
     //logic [7:0][31:0] 
     let declareText :string = declareType + '    '+ portOut + '    '+targetText+';\n';
-    console.log('declareText:' + declareText);
+    //console.log('declareText:' + declareText);
     vscode.window.showInformationMessage(declareText);
     return declareText;
 
@@ -63,9 +65,9 @@ var lineNumLocked:number;
 function getDeclareLineNum(d:TextDocument){
     //seek the task and get the line num
     //e.edit.insert(new Position(8,0),declaration);
-    
-    let lineNum:number = d.lineCount + 1;
 
+    let lineNum:number = d.lineCount;
+    //console.log(lineNum);
     var tagFlagCnt  = 0;
     lineNumLocked = 0;
     declarePosFlag = false;
@@ -81,14 +83,18 @@ function getDeclareLineNum(d:TextDocument){
             tagFlagCnt = tagFlagCnt + 1;
         }
     } 
+    //console.log(tagFlagCnt);
     if(tagFlagCnt >= lineNum){
         declarePosFlag = false;
+        vscode.window.showErrorMessage("Can't find the target: ///The end of declare");
+        console.log("Can't find the target: ///The end of declare");
+        return ;
     }
     else{
         declarePosFlag = true;
     }
     //debug
-    console.log("lineNumLocked:"+lineNumLocked);
+    //console.log("lineNumLocked:"+lineNumLocked);
 
     //如果没找到，就自己插入
 }
@@ -116,12 +122,12 @@ export function activate(context: vscode.ExtensionContext) {
 
     // Use the console to output diagnostic information (console.log) and errors (console.error)
     // This line of code will only be executed once when your extension is activated
-    console.log('Congratulations, your extension "hello-world-ext" is now active!');
-
+    console.log('Congratulations, your extension "my-verilog-extension" is now active!');
+    console.log("///The end of declare");
     // The command has been defined in the package.json file
     // Now provide the implementation of the command with registerCommand
     // The commandId parameter must match the command field in package.json
-    let disposable = vscode.commands.registerCommand('extension.helloWorld', () => {
+    let disposable = vscode.commands.registerCommand('extension.my-verilog-ext', () => {
         // The code you place here will be executed every time your command is executed
 
         if (!vscode.window.activeTextEditor) {
@@ -136,6 +142,8 @@ export function activate(context: vscode.ExtensionContext) {
         Window.showQuickPick(items).then((Selection)=>{
         
             if(!Selection){
+                //vscode.window.showInformationMessage('Nothing is selected.');
+                vscode.window.showErrorMessage('Nothing is selected.');
                 return;
             }
             let e = Window.activeTextEditor;
@@ -146,8 +154,8 @@ export function activate(context: vscode.ExtensionContext) {
             let targetText:string = d.getText(new Range(sel[0].start, sel[0].end));
             //return targetText;
             //Window.showInformationMessage(targetText);
-            console.log('lable:'+declareType);
-            console.log('text:'+targetText);
+            //console.log('lable:'+declareType);
+            //console.log('text:'+targetText);
             //declareGen(e,d,declareType,targetText);
 
             //input
@@ -160,11 +168,11 @@ export function activate(context: vscode.ExtensionContext) {
                 //validateInput:function(text){return text;}
 
             }).then(function(portText){
-                console.log("用户输入："+portText);
+                //console.log("用户输入："+portText);
 
                 //获取定位行
                 getDeclareLineNum(d);
-                console.log("lineNumLocked:"+lineNumLocked);
+                //console.log("lineNumLocked:"+lineNumLocked);
                 let declaration:string = declareGen(e,d,declareType,portText,targetText);
                 writeDeclare(e,declaration);
             });
